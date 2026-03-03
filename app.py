@@ -1,6 +1,7 @@
 """
 FastAPI application — lifespan startup and all ADMS device endpoints.
 """
+# REALTIME_FROM = '2026-03-03 17:00:00'  # Only process checkins at or after this datetime (format: 'YYYY-MM-DD HH:MM:SS')
 
 import json
 import time
@@ -41,7 +42,7 @@ async def lifespan(app: FastAPI):
     print("=" * 64)
     print()
 
-    info_logger.info(f"ADMS server started on {config.ADMS_SERVER_HOST}:{config.ADMS_SERVER_PORT}")
+    info_logger.info(f"ADMS server started on {config.ADMS_SERVER_HOST}:{config.ADMS_SERVER_PORT} | Accepting checkins from {config.REALTIME_FROM}")
 
     yield
 
@@ -77,8 +78,8 @@ async def iclock_cdata(
     table: str = Query(default="")
 ):
     """
-    Handles ALL attendance data — both historical (from DATA QUERY ATTLOG resend)
-    and live (real-time checkins).
+    Handles real-time checkins only. Records older than the server start
+    time are treated as historical device replays and silently skipped.
     """
     if request.method == "GET":
         info_logger.info(f"Handshake SN:{SN}")
@@ -114,6 +115,11 @@ async def iclock_cdata(
             log_type = 'OUT' if attendance['punch_status'] in [1, 5] else 'IN'
 
         employee_id = map_employee_id(attendance['user_id'])
+
+        # Skip historical replays — only accept punches at or after REALTIME_FROM
+        if attendance['timestamp'] < config.REALTIME_FROM:
+            duplicates += 1
+            continue
 
         key = (employee_id, attendance['timestamp_str'])
         if key in seen:

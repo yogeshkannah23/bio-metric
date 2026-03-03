@@ -2,6 +2,8 @@
 Configuration — loads from local_config.py and exposes all constants.
 """
 
+import datetime
+
 try:
     import local_config as _cfg
 except ImportError:
@@ -9,6 +11,12 @@ except ImportError:
     exit(1)
 
 ADMS_SERVER_HOST = getattr(_cfg, 'ADMS_SERVER_HOST', '0.0.0.0')
+
+_realtime_from_str = getattr(_cfg, 'REALTIME_FROM', None)
+REALTIME_FROM: datetime.datetime = (
+    datetime.datetime.strptime(_realtime_from_str, '%Y-%m-%d %H:%M:%S')
+    if _realtime_from_str else datetime.datetime.min
+)
 ADMS_SERVER_PORT = getattr(_cfg, 'ADMS_SERVER_PORT', 8090)
 LOGS_DIRECTORY   = getattr(_cfg, 'LOGS_DIRECTORY',   'logs')
 PUSH_TO_ERP      = getattr(_cfg, 'PUSH_TO_ERP',      False)
