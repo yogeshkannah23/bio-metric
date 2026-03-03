@@ -11,7 +11,7 @@ from fastapi.responses import PlainTextResponse
 
 import config
 from logger import info_logger, checkin_logger
-from erpnext import init_db, retry_pending, send_to_erpnext_or_queue
+from erpnext import send_to_erpnext_or_queue
 from adms import (
     get_device_config,
     map_employee_id,
@@ -42,10 +42,6 @@ async def lifespan(app: FastAPI):
     print()
 
     info_logger.info(f"ADMS server started on {config.ADMS_SERVER_HOST}:{config.ADMS_SERVER_PORT}")
-
-    init_db()
-    if config.PUSH_TO_ERP:
-        retry_pending()
 
     yield
 
@@ -138,7 +134,7 @@ async def iclock_cdata(
         erp_tag = ""
         if config.PUSH_TO_ERP:
             erp_tag = send_to_erpnext_or_queue(employee_id, attendance['timestamp'], device_id, log_type)
-            time.sleep(0.3)
+            time.sleep(config.ERP_CALL_DELAY)
 
         direction_icon = "🟢 IN " if log_type == 'IN' else "🔴 OUT"
         print(f"  {direction_icon} | {employee_id} | {attendance['timestamp_str']} | Dev {device_id}{erp_tag}")

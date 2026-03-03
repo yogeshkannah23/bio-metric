@@ -12,6 +12,7 @@ ADMS_SERVER_HOST = getattr(_cfg, 'ADMS_SERVER_HOST', '0.0.0.0')
 ADMS_SERVER_PORT = getattr(_cfg, 'ADMS_SERVER_PORT', 8090)
 LOGS_DIRECTORY   = getattr(_cfg, 'LOGS_DIRECTORY',   'logs')
 PUSH_TO_ERP      = getattr(_cfg, 'PUSH_TO_ERP',      False)
+ERP_CALL_DELAY   = getattr(_cfg, 'ERP_CALL_DELAY',   1)
 ERPNEXT_VERSION  = getattr(_cfg, 'ERPNEXT_VERSION',  14)
 
 ERPNEXT_URL        = _cfg.ERPNEXT_URL
