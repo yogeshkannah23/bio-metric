@@ -60,20 +60,17 @@ def send_to_erpnext(employee_field_value, timestamp, device_id=None, log_type=No
             if response.status_code == 200:
                 return 200, json.loads(response._content)['message']['name']
 
+            # Any HTTP error response from ERPNext (4xx/5xx) — no point retrying,
+            # the server received the request and rejected it
             error_str = _safe_get_error_str(response)
-
-            # Don't retry allowlisted errors — they won't change on retry
-            if any(err in error_str for err in config.ALLOWLISTED_ERRORS):
-                return response.status_code, error_str
-
-            last_code, last_msg = response.status_code, error_str
             error_logger.error('\t'.join([
-                f'ERP Error (attempt {attempt}/{RETRY_ATTEMPTS})',
-                str(employee_field_value), str(timestamp),
-                str(device_id), str(log_type), error_str
+                'ERP Error', str(employee_field_value),
+                str(timestamp), str(device_id), str(log_type), error_str
             ]))
+            return response.status_code, error_str
 
         except Exception as e:
+            # Network/connection failure — worth retrying
             last_code, last_msg = 0, str(e)
             error_logger.error(f"ERPNext connection error (attempt {attempt}/{RETRY_ATTEMPTS}) for {employee_field_value}: {e}")
 
